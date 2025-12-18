@@ -6,12 +6,18 @@ let animProgress = 0;
 
 let currentSection = null;
 
-// Tener que hacr doble click
+// --- Girar la manija ---
+let ultimoMovimiento = 0;
+let anguloAnterior = 0;
+let toleranciaTiempo = 1500; // ms sin girar → error
+let mostrarError = false;
+
+// --- Doble click ---
 let clickCount = 0;
 let lastClickTime = 0;
 let selectedOption = null;
 
-// Menu
+// --- Menú ---
 let buttons = [
   { label: "Galería", y: 90 },
   { label: "Información", y: 130 },
@@ -22,13 +28,26 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   menuTargetWidth = width;
   textFont('Arial');
+  ultimoMovimiento = millis();
 }
 
 function draw() {
+
+  // ---------- ERROR ----------
+  if (mostrarError) {
+    background(180, 0, 0);
+    fill(255);
+    textAlign(CENTER);
+    textSize(28);
+    text("ERROR\nDebe girar para permanecer", width / 2, height / 2);
+    textAlign(LEFT);
+    return;
+  }
+
   background(235);
 
-  // El menu crece al pasar el tiempo
-  menuWidth += frameCount * 0.00001;
+  // ---------- MENÚ CRECE ----------
+  menuWidth += frameCount * 0.008;
   menuWidth = constrain(menuWidth, 80, menuTargetWidth);
 
   fill(20);
@@ -43,7 +62,7 @@ function draw() {
     text(b.label, 20, b.y);
   });
 
-  // animación excesiva
+  // ---------- ANIMACIÓN EXCESIVA ----------
   if (opening) {
     animProgress += 4;
 
@@ -56,6 +75,7 @@ function draw() {
     }
   }
 
+  // ---------- CONTENIDO ----------
   if (currentSection) {
     mostrarContenido(currentSection);
   }
@@ -104,7 +124,28 @@ function mostrarContenido(seccion) {
   textAlign(CENTER);
 
   if (seccion === "Galería") {
-    text("GALERÍA", width / 2, height / 2);
+
+    text("GALERÍA", width / 2, height / 2 - 120);
+
+    // MANIJA
+    noFill();
+    stroke(0);
+    strokeWeight(4);
+    ellipse(width / 2, height / 2, 120);
+
+    fill(0);
+    noStroke();
+    textSize(14);
+    text("GIRE PARA PERMANECER", width / 2, height / 2 + 90);
+
+    // Detectar giro
+    detectarGiro();
+
+    // Si deja de girar → error
+    if (millis() - ultimoMovimiento > toleranciaTiempo) {
+      activarError();
+    }
+
   } else if (seccion === "Información") {
     text("INFORMACIÓN", width / 2, height / 2);
   } else if (seccion === "Otro") {
@@ -112,4 +153,35 @@ function mostrarContenido(seccion) {
   }
 
   textAlign(LEFT);
+}
+
+// --------------------
+function detectarGiro() {
+  let cx = width / 2;
+  let cy = height / 2;
+
+  let angulo = atan2(mouseY - cy, mouseX - cx);
+  let diferencia = abs(angulo - anguloAnterior);
+
+  if (diferencia > 0.1) {
+    ultimoMovimiento = millis();
+  }
+
+  anguloAnterior = angulo;
+}
+
+// --------------------
+function activarError() {
+  mostrarError = true;
+  setTimeout(reiniciarSistema, 2000);
+}
+
+// --------------------
+function reiniciarSistema() {
+  mostrarError = false;
+  menuWidth = 80;
+  opening = false;
+  animProgress = 0;
+  currentSection = null;
+  ultimoMovimiento = millis();
 }
