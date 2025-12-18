@@ -43,9 +43,9 @@ function draw() {
     text(b.label, 20, b.y);
   });
 
-  // Se usa una animación excesiva
+  // animación excesiva
   if (opening) {
-    animProgress += 0.4;
+    animProgress += 4;
 
     fill(60, 60, 100);
     rect(0, 0, animProgress, height);
